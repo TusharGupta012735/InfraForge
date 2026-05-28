@@ -1,0 +1,15 @@
+---
+- name: Provision InfraForge stack
+  hosts: all
+  become: true
+  roles:
+    - common
+    - ssh_hardening
+    - firewall
+    - docker
+
+- name: Configure Nginx for web tier
+  hosts: webservers
+  become: true
+  roles:
+    - nginx

@@ -1,0 +1,62 @@
+name: InfraForge CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm ci
+        working-directory: app
+      - run: npx eslint .
+        working-directory: app
+      - run: pipx install ansible-lint
+      - run: ansible-lint ansible/playbooks/*.yml
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+      - run: npm ci
+        working-directory: app
+      - run: npm test
+        working-directory: app
+
+  docker-build-push:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./app
+          push: true
+          tags: ghcr.io/${{ github.repository }}/sample-app:${{ github.sha }}
+
+  ansible-deploy:
+    runs-on: ubuntu-latest
+    needs: docker-build-push
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Ansible
+        run: pipx install ansible
+      - name: Deploy rolling update
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: ansible-playbook ansible/playbooks/deploy.yml --limit webservers
