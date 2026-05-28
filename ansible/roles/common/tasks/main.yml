@@ -1,0 +1,32 @@
+---
+- name: Update apt cache
+  ansible.builtin.apt:
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Install baseline packages
+  ansible.builtin.apt:
+    name:
+      - git
+      - curl
+      - htop
+      - net-tools
+      - python3
+      - python3-pip
+    state: present
+
+- name: Create deploy user
+  ansible.builtin.user:
+    name: deploy
+    groups: sudo
+    shell: /bin/bash
+    append: true
+    create_home: true
+
+- name: Configure passwordless sudo for deploy
+  ansible.builtin.copy:
+    dest: /etc/sudoers.d/deploy
+    content: "deploy ALL=(ALL) NOPASSWD:ALL\n"
+    owner: root
+    group: root
+    mode: '0440'

@@ -1,0 +1,26 @@
+---
+- name: Set default incoming policy to deny
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Set default outgoing policy to allow
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Allow required ports
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: tcp
+  loop:
+    - '22'
+    - '80'
+    - '443'
+    - '9090'
+    - '3000'
+
+- name: Enable UFW
+  community.general.ufw:
+    state: enabled

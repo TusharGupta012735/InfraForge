@@ -1,0 +1,7 @@
+---
+- name: Apply hardening baseline
+  hosts: all
+  become: true
+  roles:
+    - ssh_hardening
+    - firewall

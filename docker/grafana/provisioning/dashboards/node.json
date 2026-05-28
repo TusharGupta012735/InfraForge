@@ -1,0 +1,14 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "panels": [
+    {
+      "title": "CPU Usage",
+      "type": "timeseries",
+      "targets": [{"expr": "100 - (avg by(instance)(rate(node_cpu_seconds_total{mode='idle'}[2m])) * 100)"}]
+    }
+  ],
+  "schemaVersion": 39,
+  "title": "Node Exporter Overview",
+  "version": 1
+}
