@@ -1,0 +1,29 @@
+---
+- name: Rolling deploy sample app
+  hosts: webservers
+  become: true
+  serial: 30%
+  pre_tasks:
+    - name: Drain host from service (placeholder)
+      ansible.builtin.debug:
+        msg: "Draining {{ inventory_hostname }} from upstream before deploy"
+
+  tasks:
+    - name: Pull latest app image
+      community.docker.docker_image:
+        name: ghcr.io/${GITHUB_REPOSITORY:-infraforge}/sample-app
+        tag: "${IMAGE_TAG:-latest}"
+        source: pull
+
+    - name: Restart docker compose stack
+      community.docker.docker_compose_v2:
+        project_src: /opt/infraforge/docker
+        state: present
+        pull: always
+
+  post_tasks:
+    - name: Verify local health endpoint
+      ansible.builtin.uri:
+        url: http://localhost/
+        method: GET
+        status_code: 200
